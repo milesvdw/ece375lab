@@ -53,20 +53,23 @@ Text goes here
 \section{Additional Questions}
 \begin{enumerate}
     \item
-    The text of the question
+    This lab required you to compile two C programs (one given as a sample,
+    and another that you wrote) into a binary representation that allows them to
+    run directly on your mega128 board. Explain some of the benefits of writing
+    code in a language like C that can be “cross compiled”. Also, explain some
+    of the drawbacks of writing this way.
 
-    The text of the answer
+    One of the biggest advantages of writing in a higher-level language like C is that, because individual compilers take care of idiosyncrasies specific to different machines and architectures, the writer of a given program needn't consider them. Rather, they may write a generic program which, when compiled, will have small differences in the binary depending upon where it was compiled. Unfortunately, this method has the drawback of generally creating larger, less efficient code than if programs are specifically designed for individual architectures. This is because code written for cross-platform compilation is inherently unable to take advantage of some of the specific opportunities for optimization available on each architecture.
 
     \item
-    The text of the question
-    \begin{enumerate}
-        \item
-        Text of the first part of the answer
+    The C program you just wrote does basically the same thing as the sample
+    assembly program you looked at in Lab 1. What is the size (in bytes) of
+    your Lab 1 \& Lab 2 output .hex files? Can you explain why there is a size
+    difference between these two files, even though they both perform the same
+    BumpBot behavior?
 
-        \item
-        Text of the second part of the answer
-    \end{enumerate}
-
+    The Lab1 hex file is \_ bytes, while the Lab2 hex file is \_ bytes. This is most likely due to inefficiencies in the generic compilation procedures through which a C program must go in order to be cross-platform compatible. A program written directly in assembly code is much more likely to be minimal than a C program compiled to binary because the C program is written to be able to be compiled on many machines, rather than just this particular micro-controller.
+    
 \end{enumerate}
 
 \section{Difficulties}
