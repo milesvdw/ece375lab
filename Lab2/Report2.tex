@@ -30,25 +30,26 @@
 \end{titlepage}
 
 \section{Introduction}
-Text goes here
+The purpose of this lab is to gain an understanding of how C can be used to program the board instead of assembly using the AVR software. It provides insight into how C can translate into machine code because there was already an example of the program written in assembly. The new program was written to mimic the effects of the the first lab using C instead of assembly and was downloaded onto the board.
 
-\section{Internal Register Definitions and Constants}
-Text goes here
 
-\section{Interrupt Vectors}
-Text goes here
+%\section{Internal Register Definitions and Constants}
+%Text goes here
+
+%\section{Interrupt Vectors}
+%Text goes here
 
 \section{Program Initialization}
-Text goes here
+The initiealization routine first initializes the stack pointer, then Port B was initialized to all outputs and Port D was initialized to all inputs and the pull-up resistors were initialized. Port B controls the LEDs and Port D recieves the button inputs. The Move Forward command then runs on the bot until it recieves input. 
 
 \section{Main Program}
-Text goes here
+The main routine runs a simple loop which checks the values of all of the buttons associated with Port D. If no buttons are depressed, the bot moves forwards. If the left button is pressed, or both the left and right buttons are depressed, the bot backs up, turns right, then checks again. If the right button is depressed, the bot backs up, turns left, and checks the buttons again.
 
-\section{A Subroutine}
-Text goes here
+%\section{A Subroutine}
+%Text goes here
 
-\section{Stored Program Data}
-Text goes here
+%\section{Stored Program Data}
+%Text goes here
 
 \section{Additional Questions}
 \begin{enumerate}
@@ -68,15 +69,15 @@ Text goes here
     difference between these two files, even though they both perform the same
     BumpBot behavior?
 
-    The Lab1 hex file is \_ bytes, while the Lab2 hex file is \_ bytes. This is most likely due to inefficiencies in the generic compilation procedures through which a C program must go in order to be cross-platform compatible. A program written directly in assembly code is much more likely to be minimal than a C program compiled to binary because the C program is written to be able to be compiled on many machines, rather than just this particular micro-controller.
+    The Lab1 hex file is 485 bytes, while the Lab2 hex file is 840 bytes. This is most likely due to inefficiencies in the generic compilation procedures through which a C program must go in order to be cross-platform compatible. A program written directly in assembly code is much more likely to be minimal than a C program compiled to binary because the C program is written to be able to be compiled on many machines, rather than just this particular micro-controller.
     
 \end{enumerate}
 
 \section{Difficulties}
-Text goes here
+The main difficulty in completing the lab was forgetting to use PIND instead of PORTD to get input from the buttons.
 
 \section{Conclusion}
-Text goes here
+The lab was our first opportunity to program our boards with our own code and see how it behaved. We learned a lot about the board, and how written programs interact with the hardware. It was helpful to have written a program in a familiar language before we move on to assembly for future labs. 
 
 \section{Source Code}
 \begin{verbatim}
