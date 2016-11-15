@@ -1,0 +1,366 @@
+% template created by: Russell Haering. arr. Joseph Crop
+\documentclass[12pt,letterpaper]{article}
+\usepackage{anysize}
+\marginsize{2cm}{2cm}{1cm}{1cm}
+
+\begin{document}
+
+\begin{titlepage}
+    \vspace*{4cm}
+    \begin{flushright}
+    {\huge
+        ECE 375 Lab 4\\[1cm]
+    }
+    {\large
+        Data Manipulation and the LCD Display
+    }
+    \end{flushright}
+    \begin{flushleft}
+    Lab Time: Tuesday 10-12
+    \end{flushleft}
+    \begin{flushright}
+    Miles Van de Wetering
+
+	Mathew Popowski
+    \vfill
+    \rule{5in}{.5mm}\\
+    TA Signature
+    \end{flushright}
+
+\end{titlepage}
+
+\section{Introduction}
+In this lab, we learned to work with multiple registers at once in order to perform arithmetic operations on numbers that were larger than 8 bytes. Specifically, we performed 16 byte addition and subtraction, and 24 byte multiplication (we only did the extra-credit portion, since it was described as being eligible for full credit). 
+
+\section{Internal Register Definitions and Constants}
+We used r16 for a multipurpose register, r0, 1, 2, 25 to store the high bytes multiplication result (the B operand registers were used for the low bytes). r19, 20, and 23 were used to store the 2-3 bytes used for one arithmetic operand (A). r21, 22, and 25 were used to store the 2-3 bytes used for the second operand (B). r15 was used to represent the case when addition spilled over into another register. AddParam1Loc (\$0101) is the address in data memory where we stored the A operand for addition, AddParam2Loc was where we stored the second operand, and so forth. Each address left space for the appropriate number of bytes for higher-size arithmetic.
+
+\section{Program Initialization}
+To initialize our program we directed the stack pointer to the end of the program memory section, allowing us to push and pop from the stack as we change scopes (we did very little of this since storing all parameters and results in different registers made demo-ing to our TA much more straightforward). In a real application, this would allow us to reuse registers without concern for scope.
+
+\section{Main Program}
+In our main program, we retrieved the A and B operands repeatedly from the appropriate sections of data memory, performed the math operations via function calls, and stored the results in the appropriate sections of data memory. Really, our main function was a very straightforward series of load -> call -> store operations.
+
+\section{Add16}
+In this function, we added first the two low bytes of the operands together, then performed an add-with-carry with the upper bytes, and finally stored the addover if necessary.
+
+\section{Sub16}
+This function worked just like adding, except there was no possibility of a carryover (and it used subtraction instead of addition).
+
+\section{Mul24}
+This function was significantly more in-depth than the other two, and required some concentration to grasp in it's entirety. Essentially, the first operand is stored in the lower 3 result registers, then repeatedly right-shifted. Each time it's right-shifted, if a 1 was shifted off (if the carry was set) then we perform an add to the upper 3 result registers with the second operand. This is repeated 24 times (24 byte multiplication = 24 repetitions).
+
+\section{Stored Program Data}
+We stored OperandD, E, and F for use in the COMPOUND function.
+
+\section{Additional Questions}
+\begin{enumerate}
+    \item
+    Although we dealt with unsigned numbers in this lab, the ATmega128 microcontroller
+    also has some features which are important for performing signed
+    arithmetic. What does the V flag in the status register indicate? Give an
+    example (in binary) of two 8-bit values that will cause the V flag to be set
+    when they are added together.
+
+
+	The 'V' flag is an overflow flag. For example, adding FF to FF will cause an overflow (the result takes up more than 8 bits.)
+
+    \item
+    In the skeleton file for this lab, the .BYTE directive was used to allocate
+    some data memory locations for MUL16's input operands and result. What
+    are some benefits of using this directive to organize your data memory, rather
+    than just declaring some address constants using the .EQU directive?
+
+    
+    This allows us to reference these data by name.
+
+\end{enumerate}
+
+\section{Difficulties}
+We didn't have any major difficulties with this lab.
+
+\section{Conclusion}
+All in all, we learned a lot from this lab. Using functions was interesting and the introduction of the stack pointer means that theoretically we may make our program as modular as possible (as seen with the introduction of the LCD library). 
+
+\section{Source Code}
+Base Code:
+\begin{verbatim}
+;***********************************************************
+;*
+;*	Lab4
+;*
+;*	Print on LCD
+;*
+;*	This is the file for Lab 4 of ECE 375
+;*
+;***********************************************************
+;*
+;*	 Author: Mathew Popowski, Miles Van de Wetering
+;*	   Date: 10/16
+;*
+;***********************************************************
+
+.include "m128def.inc"			; Include definition file
+
+;***********************************************************
+;*	Internal Register Definitions and Constants
+;***********************************************************
+.def	mpr = r16				; Multipurpose register is
+; required for LCD Driver
+
+;***********************************************************
+;*	Start of Code Segment
+;***********************************************************
+.cseg							; Beginning of code segment
+
+;***********************************************************
+;*	Interrupt Vectors
+;***********************************************************
+.org	$0000					; Beginning of IVs
+rjmp INIT				; Reset interrupt
+
+.org	$0046					; End of Interrupt Vectors
+
+;***********************************************************
+;*	Program Initialization
+;***********************************************************
+INIT:							; The initialization routine
+; Initialize Stack Pointer
+ldi r16, high(RAMEND)
+out SPH, r16
+ldi r16, low(RAMEND)
+out SPL, r16
+; Initialize LCD Display
+rcall LCDInit
+; Move strings from Program Memory to Data Memory
+
+ldi r24, $1F
+ldi ZH,high(2*STRING1)
+ldi ZL,low(2*STRING1)
+ldi YL, low(LCDLn1Addr)
+ldi YH, high(LCDLn1Addr)
+preplcd1:
+lpm mpr, Z+
+st Y+, mpr
+dec r24
+brne preplcd1
+
+ldi r24, $0F
+ldi ZH,high(2*STRING2)
+ldi ZL,low(2*STRING2)
+ldi YL, low(LCDLn2Addr)
+ldi YH, high(LCDLn2Addr)
+preplcd2:
+lpm mpr, Z+
+st Y+, mpr
+dec r24
+brne preplcd2
+; NOTE that there is no RET or RJMP from INIT, this
+; is because the next instruction executed is the
+; first instruction of the main program
+
+
+
+;***********************************************************
+;*	Main Program
+;***********************************************************
+MAIN:							; The Main program
+; Display the strings on the LCD Display
+;		ld Z, mpr
+;		ldi mpr, LCDLn1Addr
+;		ld Y, mpr
+;		ldi r24, 16
+
+rcall LCDWrite
+rjmp	MAIN			; jump back to main and create an infinite
+; while loop.  Generally, every main program is an
+; infinite while loop, never let the main program
+; just run off
+
+;***********************************************************
+;*	Stored Program Data
+;***********************************************************
+
+STRING_END:
+STRING1:
+.DB "MATHEW          "
+STRING2:
+.DB "HELLO WORLD     "
+
+;***********************************************************
+;*	Additional Program Includes
+;***********************************************************
+.include "LCDDriver.asm"		; Include the LCD Driver
+
+\end{verbatim}
+Challenge Code:
+\begin{verbatim}
+;***********************************************************
+;*
+;*	Lab4
+;*
+;*	Print on LCD
+;*
+;*	This is the file for Lab 4 of ECE 375
+;*
+;***********************************************************
+;*
+;*	 Author: Mathew
+;*	   Date: 10/16
+;*
+;***********************************************************
+
+.include "m128def.inc"			; Include definition file
+
+;***********************************************************
+;*	Internal Register Definitions and Constants
+;***********************************************************
+.def	mpr = r16				; Multipurpose register is
+; required for LCD Driver
+
+.def	ilcnt = r18				; Inner Loop Counter
+.def	olcnt = r19				; Outer Loop Counter
+
+
+;***********************************************************
+;*	Start of Code Segment
+;***********************************************************
+.cseg							; Beginning of code segment
+
+;***********************************************************
+;*	Interrupt Vectors
+;***********************************************************
+.org	$0000					; Beginning of IVs
+rjmp INIT				; Reset interrupt
+
+.org	$0046					; End of Interrupt Vectors
+
+;***********************************************************
+;*	Program Initialization
+;***********************************************************
+INIT:							; The initialization routine
+; Initialize Stack Pointer
+ldi r16, high(RAMEND)
+out SPH, r16
+ldi r16, low(RAMEND)
+out SPL, r16
+; Initialize LCD Display
+rcall LCDInit
+
+; NOTE that there is no RET or RJMP from INIT, this
+; is because the next instruction executed is the
+; first instruction of the main program
+
+;***********************************************************
+;*	Main Program
+;***********************************************************
+MAIN:							; The Main program
+; Display the strings on the LCD Display
+;		ld Z, mpr
+;		ldi mpr, LCDLn1Addr
+;		ld Y, mpr
+;		ldi r24, 16
+
+ldi r23, $00 ;offset counter
+ldi r22, $00 ;empty register for adc
+marquis:
+; Move strings from Program Memory to Data Memory
+mov r21, r23
+ldi r24, $20
+ldi ZH,high(2*STRING1)
+ldi ZL,low(2*STRING1)
+ldi YL, low(LCDLn1Addr)
+ldi YH, high(LCDLn1Addr)
+add YL, r23 ;add in the offset
+adc YH, r22
+
+preplcd:
+lpm mpr, Z+
+st Y+, mpr
+inc r21
+
+cpi r21, 32
+breq RESETY
+resetreturn:
+
+dec r24
+
+brne preplcd
+
+push r21
+push r22
+push r23
+
+rcall LCDWrite
+
+ldi mpr, 100
+rcall WaitLp
+
+pop r23
+pop r22
+pop r21
+
+inc r23
+cpi r23, 32
+breq resetOffset
+marquisContinue:
+rjmp marquis
+
+rjmp	MAIN			; jump back to main and create an infinite
+; while loop.  Generally, every main program is an
+; infinite while loop, never let the main program
+; just run off
+
+resetOffset:
+ldi r23, $00
+rjmp marquisContinue
+
+RESETY:	
+ldi YL, low(LCDLn1Addr)
+ldi YH, high(LCDLn1Addr)
+clr r21
+rjmp resetreturn
+
+
+WaitLp:
+push	mpr			; Save wait register
+push	ilcnt			; Save ilcnt register
+push	olcnt			; Save olcnt register
+
+Loop:	ldi		olcnt, 224		; load olcnt register
+OLoop:	ldi		ilcnt, 237		; load ilcnt register
+ILoop:	dec		ilcnt			; decrement ilcnt
+brne	ILoop			; Continue Inner Loop
+dec		olcnt		; decrement olcnt
+brne	OLoop			; Continue Outer Loop
+dec		mpr		; Decrement wait 
+brne	Loop			; Continue Wait loop	
+
+pop		olcnt		; Restore olcnt register
+pop		ilcnt		; Restore ilcnt register
+pop		mpr		; Restore wait register
+ret				; Return from subroutine
+
+
+;***********************************************************
+;*	Stored Program Data
+;***********************************************************
+
+;-----------------------------------------------------------
+; An example of storing a string. Note the labels before and
+; after the .DB directive; these can help to access the data
+;-----------------------------------------------------------
+STRING_BEG:
+.DB		"My Test String"		; Declaring data in ProgMem
+STRING_END:
+STRING1:
+.DB "MATHEW          "
+STRING2:
+.DB "HELLO WORLD     "
+
+;***********************************************************
+;*	Additional Program Includes
+;***********************************************************
+.include "LCDDriver.asm"		; Include the LCD Driver
+\end{verbatim}
+\end{document}
