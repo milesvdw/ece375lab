@@ -127,6 +127,7 @@ MAIN:							; The Main program
 ;*	Functions and Subroutines
 ;***********************************************************
 SpeedUp:
+		cli
 		IN mpr, OCR0
 		CPI mpr, $00
 		BREQ doneup
@@ -138,9 +139,11 @@ SpeedUp:
 		add mpr, speed
 		OUT PORTB, mpr
 		doneup:
+		sei
 		ret
 
 SpeedDown:
+		cli
 		IN mpr, OCR0
 		CPI mpr, $FF
 		BREQ donedown
@@ -152,9 +155,11 @@ SpeedDown:
 		add mpr, speed
 		OUT PORTB, mpr
 		donedown:
+		sei
 		ret
 
 SpeedMax:
+		cli
 		ldi		mpr, $ff
 		out		OCR2, mpr
 		out		OCR0, mpr
@@ -162,15 +167,18 @@ SpeedMax:
 		ldi mpr, 0b01100000
 		add mpr, speed
 		OUT PORTB, mpr		
+		sei
 		ret
 
 SpeedMin:
+		cli
 		ldi		mpr, $00
 		out		OCR2, mpr
 		out		OCR0, mpr
 		ldi		speed, 0
 		ldi mpr, 0b01100000
 		OUT PORTB, mpr
+		sei
 		ret
 
 ;-----------------------------------------------------------
