@@ -48,20 +48,20 @@ INIT:
 		out		PORTB, mpr		; so all Port B outputs are low		
 
 	;USART1
-		;Set baudrate at 2400bps
+		;Set baudrate at 2400bps, double data rate
 		ldi		mpr, $01
 		sts		UBRR1H, mpr
 		ldi		mpr, $A0
 		sts		UBRR1L, mpr
 
-		ldi		mpr, (1<<TXC1|1<<U2X1)
+		ldi		mpr, (1<<TXC1|1<<U2X1) ;enable transfer
 		sts		UcSR1A, mpr
 
 		;Enable transfer and enable transfer interrupts
 		ldi mpr, (1<<TXEN1)
 		sts UCSR1B, mpr
 
-		ldi		mpr, (1<<UPM10|1<<UPM11|1<<UCSZ11|1<<UCSZ10|USBS1)
+		ldi		mpr, (1<<UPM10|1<<UPM11|1<<UCSZ11|1<<UCSZ10|USBS1) ;ensure settings match remote
 		sts UCSR1C, mpr
 
 		;Set frame format: 8 data bits, 2 stop bits
@@ -112,12 +112,11 @@ FREEZE:	cpi		mpr, (1<<FreezeBt)
 ;****************************************************************
 
 ;----------------------------------------------------------------
-; Sub:	HitRight
-; Desc:	Handles functionality of the TekBot when the right whisker
-;		is triggered.
+; Sub:	Send[CMD]
+; each of these uses sendCmd and SendAddr to send the appropriate command
 ;----------------------------------------------------------------
 SendLeft:
-		rcall	SendAddr
+		rcall	SendAddr 
 		ldi		cmd, 0b10010000
 		rcall	SendCmd
 		ret
@@ -165,12 +164,11 @@ SendAddr:
 		ret 
 
 SendCmd:
-		push mpr
-		lds mpr, UCSR1A
+		push mpr ;save mpr
+		lds mpr, UCSR1A ;ensure buffer is empty before writing
 		ANDI mpr, (1<<UDRE1)
 		CPI mpr,  (1<<UDRE1)
-		 ; Loop until UDR1 is empty
-		BRNE SendCmd
+		BRNE SendCmd ;write the data to the remote
 		sts UDR1, cmd
-		pop mpr
+		pop mpr ;restore mpr
 		ret

@@ -1,0 +1,92 @@
+% template created by: Russell Haering. arr. Joseph Crop
+\documentclass[12pt,letterpaper]{article}
+\usepackage{anysize}
+\marginsize{2cm}{2cm}{1cm}{1cm}
+
+\begin{document}
+
+\begin{titlepage}
+    \vspace*{4cm}
+    \begin{flushright}
+    {\huge
+        ECE 375 Lab 8\\[1cm]
+    }
+    {\large
+        Timers
+    }
+    \end{flushright}
+    \begin{flushleft}
+    Lab Time: Tuesday 10-12
+    \end{flushleft}
+    \begin{flushright}
+    Miles Van de Wetering
+
+	Mathew Popowski
+    \vfill
+    \rule{5in}{.5mm}\\
+    TA Signature
+    \end{flushright}
+
+\end{titlepage}
+
+\section{Introduction}
+In this lab, we made use of USART, timers, interrupts and polling to create a remote control robot capable of following several simple commands as well as playing 'freeze tag' with other robots.
+
+\section{Internal Register Definitions and Constants}
+EngEnR, EngEnL, EngDirR, and EngDirL were constants used to address specific bits in order to more easily control the motors. mpr was a general use variable. r16 was defined as mpr, r17 defined as 'speed', and r18 was essentially a constant in register form called 'change'. We set it to 17 and left it.
+
+
+\section{Program Initialization}
+To initialize our program we directed the stack pointer to the end of the program memory section, allowing us to push and pop from the stack as we change scopes. The remote controller then set up USART to send data (making sure to use the same configuration as the receiver).
+
+The receiver set up USART receive interrupts, timer interrupts, and interrupts for the left and right whiskers.
+
+\section{Main Program}
+The remote controller looped constantly, checking to see if any buttons were pushed. When a button was pushed, a function was executed synchronously and then polling resumed.
+
+The receiver had a simple loop in main which did nothing, because it operated primarily by interrupts.
+
+\section{Subroutines}
+\subsection{Interrupts}
+The remote controller had no interrupts, but the receiver had several. A timer interrupt was used to create a wait-one-second function. A USART interrupt served to begin control routines whenever a signal was received from the remote. Left and right whisker interrupts triggered realignment functions during which the robot reversed and turned left or right (during which time it ignored any signals received).
+
+\subsection{Send[Left, Right, Forward, Halt, Freeze]}
+Each of these functions served to send the appropriate signal to the receiver by making use of the SendAddr and SendCmd helper functions.
+
+\subsection{SendAddr}
+This helper function used the SendCmd helper function to broadcast the 8-bit address to the receiver.
+
+\subsection{SendCmd}
+This function broadcast the byte stored in cmd (r17) via USART. It only sent a byte once the buffer was empty.
+
+\subsection{Receive}
+This function performed most of the control operations in the remote.
+
+
+
+\section{Additional Questions}
+\begin{enumerate}
+    \item
+    ...
+    
+    \item
+    ...
+
+\end{enumerate}
+
+\section{Difficulties}
+We had some difficulty getting the remote to properly receive data (and not just junk bits). This was mostly solved by checking each time a signal was received to ensure that it was a one of the prescribed signals. This prevented the rare occurrence of junk data making it's way through.
+
+\section{Conclusion}
+By far the most interesting lab, getting USART to work was difficult but rewarding. 
+
+\section{Source Code}
+Base Code:
+\begin{verbatim}
+;
+; Lab7.asm
+
+
+
+\end{verbatim}
+\end{document}
