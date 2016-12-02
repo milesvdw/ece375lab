@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.2.6  C:\Users\Miles\Dropbox\Sciences\CS\ECE 375\Lab8\Lab8\Lab8\main.asm Tue Nov 22 11:53:21 2016
+AVRASM ver. 2.2.6  D:\Github\ece375lab\Lab8\Lab8\Lab8\main.asm Wed Nov 30 19:53:42 2016
 
 
 EQU  SIGNATURE_000 0000001e
@@ -871,22 +871,22 @@ DEF  mpr          r16
 DEF  cmd          r17
 EQU  RightBt      00000000
 EQU  LeftBt       00000001
-EQU  ForBt        00000002
-EQU  BackBt       00000003
-EQU  HaltBt       00000004
-EQU  FreezeBt     00000005
+EQU  ForBt        00000007
+EQU  BackBt       00000004
+EQU  HaltBt       00000005
+EQU  FreezeBt     00000006
 CSEG INIT         00000046
-CSEG MAIN         0000005d
-CSEG RIGHT        00000063
-CSEG SendLeft     00000077
-CSEG FORWARD      00000067
-CSEG SendRight    0000007b
-CSEG BACKWARD     0000006b
-CSEG SendForward  0000007f
-CSEG HALT         0000006f
-CSEG SendBackward 00000083
-CSEG FREEZE       00000073
-CSEG SendHalt     00000087
-CSEG SendFreeze   0000008b
-CSEG SendAddr     0000008f
-CSEG SendCmd      00000094
+CSEG MAIN         00000061
+CSEG RIGHT        0000006b
+CSEG SendLeft     0000007f
+CSEG FORWARD      0000006f
+CSEG SendRight    00000083
+CSEG BACKWARD     00000073
+CSEG SendForward  00000087
+CSEG HALT         00000077
+CSEG SendBackward 0000008b
+CSEG FREEZE       0000007b
+CSEG SendHalt     0000008f
+CSEG SendFreeze   00000093
+CSEG SendAddr     00000097
+CSEG SendCmd      0000009c

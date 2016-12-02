@@ -8,10 +8,10 @@
 
 .equ	RightBt = 0				
 .equ	LeftBt = 1				
-.equ	ForBt = 2
-.equ	BackBt = 3
-.equ	HaltBt = 4
-.equ	FreezeBt = 5
+.equ	ForBt = 7
+.equ	BackBt = 4
+.equ	HaltBt = 5
+.equ	FreezeBt = 6
 
 ;**************************************************************
 ;* Beginning of code segment
@@ -41,6 +41,12 @@ INIT:
 		ldi		mpr, $FF		; Initialize Port D Data Register
 		out		PORTD, mpr		; so all Port D inputs are Tri-State
 
+			    ; Initialize Port B for output
+		ldi		mpr, $ff		; Set Port B Data Direction Register
+		out		DDRB, mpr		; for output
+		ldi		mpr, $00		; Initialize Port B Data Register
+		out		PORTB, mpr		; so all Port B outputs are low		
+
 	;USART1
 		;Set baudrate at 2400bps
 		ldi		mpr, $01
@@ -48,14 +54,14 @@ INIT:
 		ldi		mpr, $A0
 		sts		UBRR1L, mpr
 
-		ldi		mpr, (1<<TXC1)
+		ldi		mpr, (1<<TXC1|1<<U2X1)
 		sts		UcSR1A, mpr
 
 		;Enable transfer and enable transfer interrupts
 		ldi mpr, (1<<TXEN1)
 		sts UCSR1B, mpr
 
-		ldi		mpr, (1<<UPM11|1<<UPM01|1<<UCSZ11|1<<UCSZ10)
+		ldi		mpr, (1<<UPM10|1<<UPM11|1<<UCSZ11|1<<UCSZ10|USBS1)
 		sts UCSR1C, mpr
 
 		;Set frame format: 8 data bits, 2 stop bits
@@ -64,9 +70,14 @@ INIT:
 ; Main Program
 ;---------------------------------------------------------------
 MAIN:
+		clr		cmd
+		clr		mpr
 		in		mpr, PIND		; Get whisker input from Port D
+		com		mpr
 		andi	mpr, (1<<LeftBt|1<<RightBt|1<<ForBt|1<<BackBt|1<<HaltBt|1<<FreezeBt)
 		cpi		mpr, (1<<LeftBt)
+				out		PORTB, mpr
+
 		brne	RIGHT			; Continue with next check
 		rcall	SendLeft		
 		rjmp	MAIN			; Continue with program
@@ -147,17 +158,19 @@ SendFreeze:
 		ret
 
 SendAddr:
+		push	mpr
 		ldi cmd, 0b00110101
 		rcall SendCmd
-		ldi cmd, 0b10100000
-		rcall SendCmd
+		pop		mpr
 		ret 
 
 SendCmd:
+		push mpr
 		lds mpr, UCSR1A
 		ANDI mpr, (1<<UDRE1)
-		CPI mpr,  (1<<UDRE1) ; Loop until UDR1 is empty
-		rjmp SendCmd
-
+		CPI mpr,  (1<<UDRE1)
+		 ; Loop until UDR1 is empty
+		BRNE SendCmd
 		sts UDR1, cmd
+		pop mpr
 		ret
